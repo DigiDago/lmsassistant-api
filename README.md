@@ -16,10 +16,6 @@ pip install -r requirements.txt
 Set the environnement variables (.env file) :
 
 ```
-python app.py
-```
-
-```
 LLM_PROVIDER=<LLM Provider to use ex: openai>
 API_KEY=<API key enabling the access to this API>
 MODEL_NAME=<Model name to use ex: gpt-3.5-turbo>
