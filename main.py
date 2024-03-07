@@ -1,4 +1,11 @@
-# main.py
+# ------------------------------------------------------------------------
+# Endpoint for the LMS Assistant API.
+#
+# Copyright   2024 Pimenko <support@pimenko.com><pimenko.com>
+# Author      Jordan Kesraoui
+# License     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+# ------------------------------------------------------------------------
+
 from typing import Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel

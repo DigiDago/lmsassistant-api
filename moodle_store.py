@@ -1,3 +1,11 @@
+# ------------------------------------------------------------------------
+# Class MoodleStore
+#
+# Copyright   2024 Pimenko <support@pimenko.com><pimenko.com>
+# Author      Jordan Kesraoui
+# License     https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+# ------------------------------------------------------------------------
+
 import requests
 import pandas as pd
 from urllib.request import urlretrieve
