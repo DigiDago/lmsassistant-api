@@ -37,3 +37,15 @@ Launch the application:
 ```
 uvicorn main:app --host 0.0.0.0 --port 8080
 ```
+
+
+Maintainer
+============
+Lmsassistant is developed by Pimenko Team.
+
+
+Any Problems, questions, suggestions
+===================
+If you have a problem with this theme, suggestions for improvement, drop an email via :
+- Github
+- Your webiste: [https://pimenko.com/](https://pimenko.com/contact-mooc-elearning/)
