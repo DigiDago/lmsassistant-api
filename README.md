@@ -8,7 +8,7 @@ It enables to request accurate information about the files of the courses in the
 Clone the repository and install the requirements:
 
 ```
-pip install -r requirements.txt
+pip3 install -r requirements.txt
 ```
 
 ## Usage
