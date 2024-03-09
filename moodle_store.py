@@ -299,7 +299,7 @@ class MoodleStore:
         )
         df['Text_Splitted'] = df['Text'].apply(text_splitter.split_text)
         # Append Heading to the top of chunk
-        df['Text_Splitted_w_Headings'] = df.apply(lambda row: ["Source: " + row['Heading'] + '\n' + chunk for chunk in row['Text_Splitted']], axis=1)
+         df['Text_Splitted_w_Headings'] = df.apply(lambda row: pd.Series(["Source: " + row['Heading'] + '\n' + chunk for chunk in row['Text_Splitted']]), axis=1)
         return df
 
     def create_vector_store(self, df, metadatas=False):
