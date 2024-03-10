@@ -42,6 +42,12 @@ uvicorn main:app --host 0.0.0.0 --port 8080
 Maintainer
 ============
 Lmsassistant is developed by Pimenko Team.
+[https://pimenko.com/](https://pimenko.com/)
+
+Support
+===================
+This project is being developed with the support of Lab e-nov
+[https://www.ifp-school.com/recherche-et-innovation/lab-enov](https://www.ifp-school.com/recherche-et-innovation/lab-enov)
 
 
 Any Problems, questions, suggestions
