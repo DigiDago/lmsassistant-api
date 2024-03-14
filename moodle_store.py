@@ -14,6 +14,8 @@ import os
 import textract
 from langchain.embeddings import HuggingFaceInstructEmbeddings
 from langchain.vectorstores import FAISS
+from langchain.text_splitter import CharacterTextSplitter
+from transformers import BartTokenizer, BartForConditionalGeneration
 
 class MoodleStore:
 
@@ -102,9 +104,10 @@ class MoodleStore:
         # HTTP request
         response = requests.post(self.wsendpoint, data)
         if response.status_code == 200:
-            return response
-            print("Response:")
+            print("Mark stored:")
             print(response.json())
+            return response
+
         else:
             raise Exception(f"Request failed with status code: {response.status_code}: {response.text}")
 
@@ -205,7 +208,7 @@ class MoodleStore:
         response=response.json()
         for section in response:
             for module in section.get('modules', []):
-                if module.get('modplural','')=='Files' or module.get('modplural','')=='Folders':
+                if module.get('modname','')=='resource' or module.get('modname','')=='folder':
                     module_name = module.get('name','')
                     module_url = module.get('url','')
                     for content in module.get('contents', []):
@@ -284,23 +287,46 @@ class MoodleStore:
             texts.append(text)
         return texts
 
-    def create_chunck_dataframe(self, material_headings, texts):
-        # Create data frame
+    def create_chunk_dataframe(self, material_headings, texts, max_size=500):
         df = pd.DataFrame({'Heading': material_headings, 'Text': texts})
 
-        # Create chunks
-        from langchain.text_splitter import CharacterTextSplitter
-        text_splitter = CharacterTextSplitter(
-            separator = "\n\n",
-            chunk_size = 500,
-            chunk_overlap  = 100,
-            length_function = len,
-            is_separator_regex = False,
-        )
-        df['Text_Splitted'] = df['Text'].apply(text_splitter.split_text)
-        # Append Heading to the top of chunk
-        df['Text_Splitted_w_Headings'] = df.apply(lambda row: ["Source: " + row['Heading'] + '\n' + chunk for chunk in row['Text_Splitted']], axis=1)
+        # Initialisation du tokenizer et du modèle
+        model_name = "facebook/bart-large-cnn"
+        bart_tokenizer = BartTokenizer.from_pretrained(model_name)
+        bart_model = BartForConditionalGeneration.from_pretrained(model_name)
 
+
+        # Initialisation du text_splitter avec une grande taille pour commencer
+        # La logique de contrôle réduira la taille si nécessaire
+        text_splitter = CharacterTextSplitter(
+            separator="\n\n",
+            chunk_size=max_size,  # Taille initiale grande, ajustée plus bas
+            chunk_overlap=0,
+            length_function=len,
+            is_separator_regex=False,
+        )
+
+        def split_text_adjusting_for_heading(row):
+           heading = "Source: " + row['Heading'] + '\n'
+           initial_text = row['Text']
+           available_text_size = max_size - len(heading)
+           text_splitter.chunk_size = max(available_text_size, 100)
+           text_chunks = text_splitter.split_text(initial_text)
+
+           # Vérifiez et résumez les chunks trop longs
+           adjusted_chunks = []
+           for chunk in text_chunks:
+               if len(chunk) > max_size:
+                   inputs = bart_tokenizer.encode("summarize: " + chunk, return_tensors="pt", max_length=available_text_size, truncation=True)
+                   summary_ids = bart_model.generate(inputs, max_length=available_text_size, length_penalty=2.0, num_beams=4, early_stopping=True)
+                   chunk = bart_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+               adjusted_chunks.append(heading + chunk)
+
+           return adjusted_chunks
+
+
+        # Appliquer la fonction de segmentation ajustée à chaque ligne du DataFrame
+        df['Text_Splitted_w_Headings'] = df.apply(split_text_adjusting_for_heading, axis=1)
         return df
 
     def create_vector_store(self, df, metadatas=False):
@@ -357,7 +383,7 @@ class MoodleStore:
             material_headings = material_headings.tolist()
 
             # Create chunks of headings dataframe.
-            chunk_df = self.create_chunck_dataframe(material_headings, texts)
+            chunk_df = self.create_chunk_dataframe(material_headings, texts)
             chunk_df['Modified'] = df['Modified']
 
             # print(posts)
