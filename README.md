@@ -16,9 +16,7 @@ pip3 install -r requirements.txt
 Set the environnement variables (.env file) :
 
 ```
-LLM_PROVIDER=<LLM Provider to use ex: openai>
 API_KEY=<API key enabling the access to this API>
-MODEL_NAME=<Model name to use ex: gpt-3.5-turbo>
 DOC_LANGUAGE=<Language of the documents ex: en>
 OPENAI_API_KEY=<OpenAI API key>
 MAX_PROMPT_TOKENS=<Max tokens to use in prompt ex: 2048>
@@ -32,12 +30,86 @@ WS_STORAGE=<Downloading files temporary storage directory ex: moodle_file>
 
 Do not forget to create token in Moodle and give it the right permissions to access to local_lmsassistant function and core_course_get_contents function.
 
-Launch the application:
+Launch the application :
 
 ```
 uvicorn main:app --host 0.0.0.0 --port 8080
 ```
 
+## Production
+
+Create service file :
+
+```
+nano /etc/systemd/system/lmsassisant-api.service
+```
+
+Set service configuration :
+
+```
+[Unit]
+Description=Serveur Uvicorn FastAPI for LMS API
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/lmsassistant-api
+ExecStart=/usr/bin/env uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Reload configuration systemd :
+
+```
+systemctl daemon-reload
+```
+
+Enable the service :
+
+```
+systemctl enable lmsassistant-api.service
+```
+
+And start the service :
+
+```
+sudo systemctl start lmsassistant-api.service
+```
+
+
+## Uninstall Production
+
+Stop the service :
+
+```
+systemctl stop lmsassistant-api.service
+```
+
+Disable the service :
+```
+systemctl disable lmsassistant-api.service
+```
+
+Remove the service :
+
+```
+rm /etc/systemd/system/lmsassistant-api.service
+```
+
+Reload systemd configuration :
+
+```
+systemctl daemon-reload
+```
+
+And delete the applicatiohn :
+
+```
+rm -rf /var/www/lmsassistant-api
+```
 
 Maintainer
 ============

@@ -20,11 +20,19 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 class MoodleStore:
 
     def __init__(self, wstoken: str, wsendpoint: str, wsstorage: str):
+        """Initialize the MoodleStore class.
+
+        Args:
+            wstoken (str): The wstoken.
+            wsendpoint (str): The wsendpoint.
+            wsstorage (str): The wsstorage.
+        """
+
         self.wstoken = wstoken
         self.wsendpoint = wsendpoint
         self.wsstorage = wsstorage
 
-    def ws_get_courses_to_vectorstore(self):
+    def get_courses_to_vectorstore(self):
         """Retrieve course information from the LMSAssistant plugin.
 
         Returns:
@@ -49,7 +57,7 @@ class MoodleStore:
         else:
             raise Exception(f"Request failed with status code: {response.status_code}: {response.text}")
 
-    def ws_get_course_content(self, courseid: str):
+    def get_course_content(self, courseid: str):
         """Run a Moodle Webservice API call.
 
         This function allows simple API calls via the Webservice API.
@@ -82,7 +90,7 @@ class MoodleStore:
         else:
             raise Exception(f"Request failed with status code: {response.status_code}: {response.text}")
 
-    def ws_mark_course_as_stored(self, courseid: str):
+    def mark_course_as_stored(self, courseid: str):
         """Mark a course as stored in the LMSAssistant plugin.
 
         Args:
@@ -111,7 +119,7 @@ class MoodleStore:
         else:
             raise Exception(f"Request failed with status code: {response.status_code}: {response.text}")
 
-    def ws_mark_course_as_storing(self, courseid: str):
+    def mark_course_as_storing(self, courseid: str):
             """Mark a course as storing in the LMSAssistant plugin.
 
             Args:
@@ -139,65 +147,13 @@ class MoodleStore:
             else:
                 raise Exception(f"Request failed with status code: {response.status_code}: {response.text}")
 
-    def ws_return_announcements(self, courseid: str):
-
-        posts = pd.DataFrame(columns=['Subject', 'URL', 'Message', 'Modified'])
-
-        fn = "mod_forum_get_forums_by_courses"
-
-        data = {
-            "courseids[0]": courseid,
-            "wstoken": self.wstoken,
-            "wsfunction": fn,
-            "moodlewsrestformat": "json",
-        }
-
-        forumid = 0
-        forums = requests.post(self.wsendpoint, data).json()
-        for forum in forums:
-            if (forum.get('type')=="news"):
-                forumid=forum.get('id')
-
-        if forumid==0:
-            print("Unable to find forums. Returning None.")
-            return None
-
-        fn = "mod_forum_get_forum_discussions"
-
-        data = {
-            "forumid": forumid,
-            "wstoken": self.wstoken,
-            "wsfunction": fn,
-            "moodlewsrestformat": "json",
-        }
-
-        response = requests.post(endpoint,data).json()
-        discussions = response.get('discussions',[])
-        for discussion in discussions:
-            fn = "mod_forum_get_discussion_posts"
-            data = {
-                "discussionid": discussion.get('discussion'),
-                "wstoken": self.wstoken,
-                "wsfunction": fn,
-                "moodlewsrestformat": "json",
-            }
-            discussion_posts = requests.post(endpoint,data).json().get('posts',[])
-            for post in discussion_posts:
-                subject=post['subject']
-                message=post['message']
-                url=post['urls']['view']
-                modified=post['timemodified']
-                posts.loc[len(posts)]=[subject,url,message, modified]
-
-        return(posts)
-
-    def ws_create_file_list(self, response: requests.Response):
+    def create_file_list(self, response: requests.Response):
         """Create file list from Moodle Webservice core_course_get_contents response.
 
         This function create a file list from Moodle Webservice API response object.
 
         Args:
-            response (requests.Response): requests.Response object based on ws_get_course_content(courseid)
+            response (requests.Response): requests.Response object based on get_course_content(courseid)
 
         Returns:
             pandas DataFrame
@@ -216,7 +172,7 @@ class MoodleStore:
                         file_data.loc[len(file_data)] = [item_name,module_url,content.get('fileurl', '') + "&token=" + self.wstoken, content.get('timemodified', '')]
         return file_data
 
-    def ws_files_todisk(self, df: pd.DataFrame, dirfiles: str):
+    def files_todisk(self, df: pd.DataFrame, dirfiles: str):
         """Save Moodle files to disk.
 
         This function downloads files based on a file list and saves them to disk.
@@ -247,6 +203,14 @@ class MoodleStore:
         return True
 
     def read_filenames_from_directory(self, material_directory: str):
+        """Read filenames from a directory.
+
+        Args:
+            material_directory (str): The directory to read filenames from.
+
+        Returns:
+            list: List of filenames.
+        """
         filenames = []
         for root, dirs, files in os.walk(material_directory):
             for name in files:
@@ -255,7 +219,17 @@ class MoodleStore:
                     filenames.append(os.path.join(root, name))
         return filenames
 
-    def create_material_headings_from_filenames(self, filenames, material_directory):
+    def create_material_headings_from_filenames(self, filenames: list, material_directory: str):
+        """Create material headings from filenames.
+
+        Args:
+            filenames (list): List of filenames.
+            material_directory (str): The directory to read filenames from.
+
+        Returns:
+            list: List of material headings.
+        """
+
         # Make headings pretty based on file names
         # '_' to ' ', remove file suffixes, title case, "/" to ": "
         material_headings = [filename[len(material_directory):] for filename in filenames]
@@ -268,7 +242,16 @@ class MoodleStore:
         material_headings = [pretty_headings(heading) for heading in material_headings]
         return material_headings
 
-    def convert_files_totext(self, filenames):
+    def convert_files_totext(self, filenames: list):
+        """Convert files to text.
+
+        Args:
+            filenames (list): List of filenames.
+
+        Returns:
+            list: List of texts.
+        """
+
         # Extract text from the files
         # Supported file formats: https://textract.readthedocs.io/en/stable/ + MarkDown
         texts = []
@@ -287,7 +270,18 @@ class MoodleStore:
             texts.append(text)
         return texts
 
-    def create_chunk_dataframe(self, material_headings, texts, max_size=500):
+    def create_chunk_dataframe(self, material_headings: list, texts: list, max_size: int = 500):
+        """Create chunk dataframe.
+
+        Args:
+            material_headings (list): List of material headings.
+            texts (list): List of texts.
+            max_size (int): Maximum size of chunks. Defaults to 500.
+
+        Returns:
+            pandas.DataFrame: pandas.DataFrame object.
+        """
+
         df = pd.DataFrame({'Heading': material_headings, 'Text': texts})
 
         # Initialisation du tokenizer et du modèle
@@ -329,7 +323,16 @@ class MoodleStore:
         df['Text_Splitted_w_Headings'] = df.apply(split_text_adjusting_for_heading, axis=1)
         return df
 
-    def create_vector_store(self, df, metadatas=False):
+    def create_vector_store(self, df: pd.DataFrame, metadatas: bool = False):
+        """Create vector store.
+
+        Args:
+            df (pandas.DataFrame): pandas.DataFrame object.
+            metadatas (bool): Whether to include metadatas. Defaults to False.
+
+        Returns:
+            langchain.vectorstores.FAISS: langchain.vectorstores.FAISS object.
+        """
         master_chunk = []
         master_metadata=[]
         for i, row in df.iterrows():
@@ -342,9 +345,15 @@ class MoodleStore:
         return FAISS.from_texts(texts=master_chunk, embedding=embeddings,metadatas=master_metadata if metadatas else None)
 
     def store(self):
+        """Store courses to disk and create vector stores.
+
+        This function retrieves courses needing to be stored, retrieves the course contents, stores them to disk,
+        converts files to text, creates material headings, creates chunks of headings dataframe, and creates vector store faiss.
+        """
+
         print("Starting LMSAssistant importation." )
         # Retrieve courses needing to be stored.
-        courses = self.ws_get_courses_to_vectorstore()
+        courses = self.get_courses_to_vectorstore()
 
         # For each course, retrieve the course contents and store them to disk.
         for course in courses:
@@ -353,20 +362,20 @@ class MoodleStore:
             courseid = course.get('id')
 
             # Mark Moodle Course as storing.
-            self.ws_mark_course_as_storing(courseid)
+            self.mark_course_as_storing(courseid)
 
             # Retrieve course contents.
-            resp=self.ws_get_course_content(courseid)
+            resp=self.get_course_content(courseid)
 
             # Create file list.
-            df=self.ws_create_file_list(resp)
+            df=self.create_file_list(resp)
 
             # Directory to save files.
             dirfiles = "course_" + str(courseid)
 
             # Save files to disk in the directory.
-            self.ws_files_todisk(df, dirfiles)
-            #posts=ws_return_announcements()
+            self.files_todisk(df, dirfiles)
+            #posts=return_announcements()
 
             # Keep track of the files that were downloaded.
             filenames = []
@@ -403,7 +412,7 @@ class MoodleStore:
             vector_store.save_local(vector_store_dir)
 
             # Mark Moodle Course as stored.
-            self.ws_mark_course_as_stored(courseid)
+            self.mark_course_as_stored(courseid)
 
             # Remove the course directory.
             os.system("rm -rf " + dirfiles)

@@ -20,7 +20,20 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class ChatMoodle:
-    def __init__(self, token, llm_provider, model_name, model_cache, max_tokens, doc_language, courseid, instruction, history):
+    def __init__(self, token: str, llm_provider: str, model_name: str, model_cache: str, max_tokens: int, doc_language: str, courseid: int, instruction: str, history: list):
+        """ Initialize the ChatMoodle class.
+
+        Args:
+            token(str): The Api token
+            llm_provider(str): The LLM provider
+            model_name(str): The model name
+            model_cache(str): The cache directory
+            max_tokens(int): The max tokens
+            doc_language(str): The doc lanagage
+            courseid(int): The moodle courseid
+            instruction(str): The instruction
+            history(list): The history of messages
+        """
 
         self.token = token
 
@@ -60,7 +73,17 @@ class ChatMoodle:
         self.instruction = instruction
 
 
-    def provide_context_for_question(self, query, smart_search=False):
+    def provide_context_for_query(self, query: str, smart_search: bool = False):
+        """ Provide context for query
+
+        Args:
+            query(str): The message query
+            smart_search(bool): If using smart search
+
+        Returns:
+            str: Query with context
+        """
+
         if smart_search==True:
             system="""
             You are an AI that provides assistance in database search.
@@ -80,7 +103,16 @@ class ChatMoodle:
         return context
 
     # Define functions for memory management
-    def purge_memory(self, messages):
+    def purge_memory(self, messages: list):
+        """ Purge memory to save tokens
+
+        Args:
+            messages(list): The list of messages
+
+        Returns:
+            int: The token count
+        """
+
         token_count = self.token_counter(messages)
         if (len(messages)>1):
             while (token_count > int(os.getenv("MAX_PROMPT_TOKENS"))):
@@ -92,7 +124,16 @@ class ChatMoodle:
         return token_count
 
     # PROMPT TOKEN COUNT DOES NOT EXACTLY MATCH OPENAI COUNT
-    def token_counter(self, messages):
+    def token_counter(self, messages: list):
+        """ Count tokens
+
+        Args:
+            messages(list): The list of messages
+
+        Returns:
+            int: The token count
+        """
+
         # print("Counting tokens based on: " + current_model)
         if self.model_name == "gpt-4":
             encoding = tiktoken.encoding_for_model("gpt-4")
@@ -102,10 +143,18 @@ class ChatMoodle:
         token_count = len(encoding.encode(concatenated_content))
         return token_count
 
-    def call_chat(self, query):
+    def call_chat(self, query: str):
+        """ Call chat
+
+        Args:
+            query(str): The message query
+
+        Returns:
+            str: The results content
+        """
 
         # Search vector store for relevant documents
-        context = self.provide_context_for_question(query)
+        context = self.provide_context_for_query(query)
 
         # Combine instructions + context to create system instruction for the chat model
         system_instruction = self.instruction + context

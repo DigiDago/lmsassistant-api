@@ -20,6 +20,16 @@ load_dotenv()
 app = FastAPI()
 @app.post("/api/v1/query")
 async def query(query: Query):
+    """ Endpoint for the LMS Assistant API.
+
+    Args:
+        query(Query): The query object
+
+    Returns:
+        dict: The answer
+    """
+
+    # Check token
     if query.token != os.getenv("API_KEY"):
         raise HTTPException(status_code=404, detail="Permission denied. Invalid token.")
 
@@ -36,10 +46,22 @@ async def query(query: Query):
 
 @app.post("/api/v1/coursesupdated")
 async def coursesupdated(coursesupdated: CoursesUpdated):
+    """ Endpoint for the LMS Assistant API.
+
+    Args:
+        coursesupdated(CoursesUpdated): The coursesupdated object
+
+    Returns:
+        dict: The coursesupdated
+    """
+
+    # Check token
     if coursesupdated.token != os.getenv("API_KEY"):
         raise HTTPException(status_code=404, detail="Permission denied. Invalid token.")
+
     # Launch moodle-lmsassistant.py
     moodle_store = MoodleStore(os.getenv("WS_TOKEN"), os.getenv("WS_ENDPOINT"), os.getenv("WS_STORAGE"))
     moodle_store.store()
 
+    # Courses updated
     return {"coursesupdated":"coursesupdated"}
