@@ -41,7 +41,7 @@ uvicorn main:app --host 0.0.0.0 --port 8080
 Create service file :
 
 ```
-nano /etc/systemd/system/lmsassisant-api.service
+nano /etc/systemd/system/lmsassistant-api.service
 ```
 
 Set service configuration :
