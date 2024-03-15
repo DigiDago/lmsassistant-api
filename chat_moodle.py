@@ -9,11 +9,11 @@
 from loguru import logger
 from datetime import datetime
 from langchain.schema import AIMessage, SystemMessage, HumanMessage
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
-from langchain_community.chat_models import ChatOpenAI
-from langchain_community.chat_models import ChatOllama
-from langchain_community.callbacks import get_openai_callback
-from langchain_community.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceInstructEmbeddings
+from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import ChatOllama
+from langchain.callbacks import get_openai_callback
+from langchain.vectorstores import FAISS
 import tiktoken
 import os
 from dotenv import load_dotenv

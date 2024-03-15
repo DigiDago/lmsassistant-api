@@ -12,8 +12,8 @@ from urllib.request import urlretrieve
 import argparse
 import os
 import textract
-from langchain_community.embeddings import HuggingFaceInstructEmbeddings
-from langchain_community.vectorstores import FAISS
+from langchain.embeddings import HuggingFaceInstructEmbeddings
+from langchain.vectorstores import FAISS
 from langchain.text_splitter import CharacterTextSplitter
 from transformers import BartTokenizer, BartForConditionalGeneration
 
