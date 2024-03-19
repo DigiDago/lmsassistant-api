@@ -375,7 +375,6 @@ class MoodleStore:
 
             # Save files to disk in the directory.
             self.files_todisk(df, dirfiles)
-            #posts=return_announcements()
 
             # Keep track of the files that were downloaded.
             filenames = []
@@ -394,13 +393,6 @@ class MoodleStore:
             # Create chunks of headings dataframe.
             chunk_df = self.create_chunk_dataframe(material_headings, texts)
             chunk_df['Modified'] = df['Modified']
-
-            # print(posts)
-            #if posts is not None:
-            #    post_headings = "Announcements->" + posts['Subject'] + ", " + posts['URL']
-            #    post_chunk_df = create_chunck_dataframe(post_headings,posts['Message'])
-            #    post_chunk_df['Modified'] = posts['Modified']
-            #    chunk_df = pd.concat([chunk_df,post_chunk_df],ignore_index=True)
 
             # Create vector store faiss.
             vector_store = self.create_vector_store(chunk_df, metadatas=True)
