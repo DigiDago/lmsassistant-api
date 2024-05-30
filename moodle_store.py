@@ -401,11 +401,14 @@ class MoodleStore:
             # Filter files converting successfully.
             valid_material_headings = []
             valid_texts = []
-            for heading, text in zip(material_headings, texts):
+            valid_modifications = []
+
+            for heading, text, modified in zip(material_headings, texts, df['Modified']):
                 if text:  # Si le texte n'est pas vide ou None
                     valid_material_headings.append(heading)
                     valid_texts.append(text)
-    
+                    valid_modifications.append(modified)
+
             # Verify the list is the same length.
             if len(valid_material_headings) != len(valid_texts):
                 print("Mismatch in lengths of headings and texts. Skipping this course.")
