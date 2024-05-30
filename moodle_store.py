@@ -415,8 +415,8 @@ class MoodleStore:
                 continue
 
             # Create chunks of headings dataframe.
-            chunk_df = self.create_chunk_dataframe(material_headings, texts)
-            chunk_df['Modified'] = df['Modified']
+            chunk_df = self.create_chunk_dataframe(valid_material_headings, valid_texts)
+            chunk_df['Modified'] = valid_modifications
 
             # Create vector store faiss.
             vector_store = self.create_vector_store(chunk_df, metadatas=True)
