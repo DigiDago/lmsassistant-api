@@ -196,9 +196,13 @@ class MoodleStore:
             os.mkdir(save_dir)
 
         for index, row in df.iterrows():
-            print("Download file :" + str(['Download URL']))
-            # Download file from URL
-            urlretrieve(row['Download URL'], save_dir + "/" + row['Filename'])
+            try:
+                print("Download file :" + str(['Download URL']))
+                # Download file from URL
+                urlretrieve(row['Download URL'], save_dir + "/" + row['Filename'])
+            except Exception as e:
+                print(f"Error downloading {row['Filename']}: {e}")
+                continue
 
         return True
 
@@ -256,18 +260,22 @@ class MoodleStore:
         # Supported file formats: https://textract.readthedocs.io/en/stable/ + MarkDown
         texts = []
         for filename in filenames:
-            # Exctract file type
-            filetype = filename.split('.')[-1]
-            print("Converting to text: " + filename)
-            if filetype != "md":
-                text = textract.process(filename)
-                text = text.decode("utf-8")
-            else:
-                with open(filename) as f:
-                    text=f.read()
-                    f.close()
+            try:
+                # Exctract file type
+                filetype = filename.split('.')[-1]
+                print("Converting to text: " + filename)
+                if filetype != "md":
+                    text = textract.process(filename)
+                    text = text.decode("utf-8")
+                else:
+                    with open(filename) as f:
+                        text=f.read()
+                        f.close()
 
-            texts.append(text)
+                texts.append(text)
+            except Exception as e:
+                print(f"Error converting {filename}: {e}")
+                continue
         return texts
 
     def create_chunk_dataframe(self, material_headings: list, texts: list, max_size: int = 500):
