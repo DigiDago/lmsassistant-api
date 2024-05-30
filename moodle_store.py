@@ -398,6 +398,19 @@ class MoodleStore:
             material_headings = df['Filename'] + ", " + df['User URL']
             material_headings = material_headings.tolist()
 
+            # Filter files converting successfully.
+            valid_material_headings = []
+            valid_texts = []
+            for heading, text in zip(material_headings, texts):
+                if text:  # Si le texte n'est pas vide ou None
+                    valid_material_headings.append(heading)
+                    valid_texts.append(text)
+    
+            # Verify the list is the same length.
+            if len(valid_material_headings) != len(valid_texts):
+                print("Mismatch in lengths of headings and texts. Skipping this course.")
+                continue
+
             # Create chunks of headings dataframe.
             chunk_df = self.create_chunk_dataframe(material_headings, texts)
             chunk_df['Modified'] = df['Modified']
